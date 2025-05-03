@@ -1,4 +1,4 @@
-from config.config import CONFIG
+from app.config.config import CONFIG
 import psycopg2
 
 def get_connection():

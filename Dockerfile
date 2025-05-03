@@ -1,6 +1,6 @@
-FROM python:3.12.3-slim
+FROM python:3.12-slim
 
-# install system dependencies
+# Install system dependencies
 RUN apt-get update && apt-get install -y \
     build-essential \
     libpq-dev \
@@ -9,19 +9,27 @@ RUN apt-get update && apt-get install -y \
     git \
     && rm -rf /var/lib/apt/lists/*
 
-# install poetry
-RUN pip install poetry
+# Install pip and poetry
+RUN pip install --no-cache-dir --upgrade pip
+RUN pip install --no-cache-dir poetry==2.1.1
 
-# create working directories
+# Set up working directory
 WORKDIR /app
 
-# copy poetry files
-COPY pyproject.toml poetry.lock* /app/
-RUN poetry config virtualenvs.create false \
-  && poetry install --no-root --no-interaction --no-ansi
+# Copy only poetry related files first (for better caching)
+COPY poetry.lock pyproject.toml ./
 
-# copy the rest of the code
-COPY . /app
+# Configure poetry to not create a virtual environment
+RUN poetry config virtualenvs.create false
 
-# default command
-CMD ["poetry", "run", "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+# Install dependencies (Poetry 2.1.1 syntax)
+RUN poetry install --no-root --no-interaction
+
+# Copy the rest of the application
+COPY . .
+
+# Expose port
+EXPOSE 8000
+
+# Command to run the application
+CMD ["python", "-m", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
