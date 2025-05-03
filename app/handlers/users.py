@@ -12,3 +12,18 @@ def read_usuarios():
     cur.close()
     conn.close()
     return [{"id": row[0], "name": row[1]} for row in rows]
+
+@router.get("/friends/{id}")
+def read_usuarios(id: int):
+    conn = database.get_connection()
+    cur = conn.cursor()
+    cur.execute("""
+        SELECT u.id, u.nombre
+        FROM usuarios u, amigos a
+        WHERE (u.id = a.usuario_id AND a.amigo_id = %s)
+           OR (u.id = a.amigo_id AND a.usuario_id = %s);
+    """, (id, id))
+    rows = cur.fetchall()
+    cur.close()
+    conn.close()
+    return [{"id": row[0], "name": row[1]} for row in rows]
