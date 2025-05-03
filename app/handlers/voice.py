@@ -1,5 +1,5 @@
 import whisper
-from app.config.config import CONFIG
+from config.config import CONFIG
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain.prompts import PromptTemplate
 from fastapi import APIRouter, File, UploadFile, HTTPException

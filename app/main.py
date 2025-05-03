@@ -1,6 +1,6 @@
 from fastapi import FastAPI
-from app.handlers import users, voice, image
-from app.config.config import load_config
+from handlers import users, voice, image
+from config.config import load_config
 
 load_config()
 app = FastAPI()

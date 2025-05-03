@@ -1,5 +1,5 @@
 [project]
-name = "hackupc2025-backend"
+name = "split-the-bill"
 version = "0.1.0"
 description = ""
 authors = [
@@ -18,7 +18,6 @@ dependencies = [
     "langchain-google-genai (>=2.1.4,<3.0.0)",
     "python-multipart (>=0.0.20,<0.0.21)"
 ]
-
 
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]
