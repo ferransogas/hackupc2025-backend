@@ -4,7 +4,7 @@ from fastapi import APIRouter
 router = APIRouter()
 
 @router.get("/users")
-def read_usuarios():
+def get_users():
     conn = database.get_connection()
     cur = conn.cursor()
     cur.execute("SELECT id, nombre FROM usuarios")
@@ -14,7 +14,7 @@ def read_usuarios():
     return [{"id": row[0], "name": row[1]} for row in rows]
 
 @router.get("/friends/{id}")
-def read_usuarios(id: int):
+def get_friends(id: int):
     conn = database.get_connection()
     cur = conn.cursor()
     cur.execute("""
