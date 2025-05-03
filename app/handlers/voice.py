@@ -2,18 +2,23 @@ import whisper
 from app.config.config import CONFIG
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain.prompts import PromptTemplate
-from fastapi import APIRouter, File, UploadFile
+from fastapi import APIRouter, File, UploadFile, HTTPException
 import os
 import shutil
 import tempfile
 
 router = APIRouter()
 
-
 # TODO: relacionar els productes detectats amb els del tiquet
 # TODO: usuaris del initial_prompt ha de ser una crida a la bd
+# TODO: fer json de la resposta
 @router.post("/voice")
 async def process_speech(audio_file: UploadFile = File(...)):
+    # Validate file type
+    content_type = audio_file.content_type
+    if not content_type or not content_type.startswith("audio/"):
+        raise HTTPException(status_code=400, detail="File must be an audio file")
+    
     # create a temporary file to store the uploaded audio
     with tempfile.NamedTemporaryFile(delete=False, suffix=os.path.splitext(audio_file.filename)[1]) as temp_audio:
         # copy the uploaded file content to the temporary file
