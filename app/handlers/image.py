@@ -2,20 +2,83 @@ from fastapi import APIRouter, File, UploadFile, HTTPException
 import shutil
 import tempfile
 import os
+from PIL import Image
+import pytesseract
+import json
+from app.config.config import CONFIG
+from langchain_google_genai import ChatGoogleGenerativeAI
+from langchain.prompts import PromptTemplate
+from langchain.schema import HumanMessage
+
 
 router = APIRouter()
 
 @router.post("/image")
 async def process_image(image_file: UploadFile = File(...)):
-    # Validate file type
+    # validate file type
     content_type = image_file.content_type
     if not content_type or not content_type.startswith("image/"):
         raise HTTPException(status_code=400, detail="File must be an image")
     
-    # Create a temporary file to store the uploaded image
+    # create a temporary file to store the uploaded image
     with tempfile.NamedTemporaryFile(delete=False, suffix=os.path.splitext(image_file.filename)[1]) as temp_image:
-        # Copy the uploaded file content to the temporary file
+        # copy the uploaded file content to the temporary file
         shutil.copyfileobj(image_file.file, temp_image)
         image = temp_image.name
 
-    return "Image processed successfully"
+    # extract the text from the image
+    text = image_to_string(image)
+
+    # delete the temporary file
+    os.unlink(image)
+
+    return extract_items_with_llm(text)
+
+def image_to_string(path):
+    return pytesseract.image_to_string(Image.open(path))
+
+def extract_items_with_llm(text: str) -> dict:
+    llm = ChatGoogleGenerativeAI(
+        model='gemma-3-27b-it',
+        google_api_key=CONFIG['GEMINI_KEY'],
+        temperature=0
+    )
+    template = """
+    You are a data extraction assistant. I will give you the raw text of a purchase receipt.
+
+    Your job is to identify each product on the receipt and extract a JSON dictionary where the keys are the product names and the values are their corresponding prices (including currency symbols if present).
+
+    Return only a valid JSON object like this:
+    {{  
+    "product1": "price1",  
+    "product2": "price2"
+    }}
+
+    Rules:
+    -The keys (products) must match exactly how they appear in the OCR text, as strings.
+    -The values must be doubles: the total sum of all occurrences of each product, rounded to two decimal places.
+    -If a product appears multiple times, add up its prices before converting to a double. Example: '1 Coca Cola 1.50' and then '1 Coca Cola 1.50' = 'Coca Cola': 3.00
+    -Ignore irrelevant lines like totals, taxes, discounts or zero quantities.
+    -Do NOT include anything else: no code fences, no explanations, no extra quotation marks, no markdown, just JSON.
+    -Return only the JSON object.
+
+    Receipt text:
+    {text}
+    """
+    prompt = PromptTemplate.from_template(template)
+    chain = prompt | llm
+    result = chain.invoke({'text': text})
+    raw = result.content.strip()
+
+    # clean the code in case it's markdown
+    if raw.startswith("```"):
+        lines = raw.splitlines()
+        if lines[0].strip().lower() == "```json":
+            lines = lines[1:]
+        elif lines[0].strip().startswith("```"):
+            lines = lines[1:]
+        if lines and lines[-1].strip().startswith("```"):
+            lines = lines[:-1]
+        raw = "\n".join(lines)
+
+    return json.loads(raw)
