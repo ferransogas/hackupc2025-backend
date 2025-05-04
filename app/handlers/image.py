@@ -52,7 +52,7 @@ def extract_items_with_llm(text: str) -> dict:
     template = """
     You are a data extraction assistant. I will give you the raw text of a purchase receipt.
 
-    Your job is to identify each product on the receipt and extract a JSON dictionary where the keys are the product names and the values are their corresponding prices (including currency symbols if present).
+    Your job is to identify each product on the receipt and extract a JSON dictionary where the keys are the product names and the values are their corresponding prices.
 
     Return only a valid JSON object like this:
     {{  
@@ -66,6 +66,7 @@ def extract_items_with_llm(text: str) -> dict:
     - If a product appears multiple times, add up its prices before converting to a double. Example: '1 Coca Cola 1.50' and then '1 Coca Cola 1.50' = 'Coca Cola': 3.00
     - Ignore irrelevant lines like totals, taxes, discounts or zero quantities.
     - Do NOT include anything else: no code fences, no explanations, no extra quotation marks, no markdown, just JSON.
+    - Do not include currency symbols.
     - Return only the JSON object.
 
     Receipt text:
