@@ -14,11 +14,8 @@ import tempfile
 router = APIRouter()
 
 class ShoppingListPeople(BaseModel):
-    food_items: Dict[str, List[str]]
+    items: Dict[str, List[str]]
 
-# TODO: relacionar els productes detectats amb els del tiquet
-# TODO: usuaris del initial_prompt ha de ser una crida a la bd
-# TODO: fer json de la resposta
 @router.post("/voice")
 async def process_speech(audio_file: UploadFile = File(...), products: str = Form(...), user_id: int = Form(...)):
     # Validate file type
@@ -36,10 +33,10 @@ async def process_speech(audio_file: UploadFile = File(...), products: str = For
     products = json.loads(products)
         
     # get user's friends
-    friends = fetch_friends(user_id)
+    friends_names = get_friends_names(user_id)
 
     # convert the audio file to text
-    text = speech_to_text(audio, friends)
+    text = speech_to_text(audio, friends_names)
     print(text)
     # delete the temporary file
     os.unlink(audio)
@@ -51,10 +48,10 @@ async def process_speech(audio_file: UploadFile = File(...), products: str = For
     categorized = categorize_products(identified, products.keys())
 
     # validate the categorized data
-    return validate_data(categorized, 1)
+    return validate_data(categorized, 1)    
     
 
-def fetch_friends(user_id):
+def get_friends_names(user_id):
     return [friend['name'] for friend in get_friends(user_id)]
 
 def speech_to_text(audio, friends):
@@ -158,7 +155,7 @@ def categorize_products(identified: dict, products: dict):
 def validate_data(data: dict, num_tries: int = 0):
     # validate the struct of the data
     try:
-        result = ShoppingListPeople(data)
+        result = ShoppingListPeople(items=data)
         return result
     
     except ValidationError as e:

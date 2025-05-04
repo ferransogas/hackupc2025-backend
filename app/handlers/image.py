@@ -15,7 +15,7 @@ from typing import Dict, List
 router = APIRouter()
 
 class ShoppingListPrices(BaseModel):
-    food_items: Dict[str, float]
+    items: Dict[str, float]
 
 @router.post("/image")
 async def process_image(image_file: UploadFile = File(...)):
@@ -92,7 +92,7 @@ def extract_items_with_llm(text: str) -> dict:
 def validate_data(data: dict, num_tries: int = 0):
     # validate the struct of the data
     try:
-        result = ShoppingListPrices(data)
+        result = ShoppingListPrices(items=data)
         return result
     
     except ValidationError as e:
