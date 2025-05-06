@@ -38,7 +38,7 @@ async def process_image(image_file: UploadFile = File(...)):
 
     extracted = extract_items_with_llm(text)
 
-    return validate_data(extracted, 1)
+    return validate_data(extracted, 1).items
 
 def image_to_string(path):
     return pytesseract.image_to_string(Image.open(path))

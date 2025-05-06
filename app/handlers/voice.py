@@ -48,7 +48,7 @@ async def process_speech(audio_file: UploadFile = File(...), products: str = For
     categorized = categorize_products(identified, products.keys())
 
     # validate the categorized data
-    return validate_data(categorized, 1)    
+    return validate_data(categorized, 1).items  
     
 
 def get_friends_names(user_id):
