@@ -66,7 +66,7 @@ The response will be a JSON object with the extracted products and their prices.
 
 To process a voice recording, send a POST request to `/voice` with the following parameters:
 
-- `audio_file`: The voice recording file.
+- `audio_file`: The voice recording file (audio must be in english).
 - `products`: The JSON with the products processed previously.
 - `user_id`: The user ID.
 

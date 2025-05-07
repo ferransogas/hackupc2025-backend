@@ -39,7 +39,7 @@ async def process_speech(audio_file: UploadFile = File(...), products: str = For
 
     # convert the audio file to text
     text = speech_to_text(audio, friends_names)
-    print(text)
+
     # delete the temporary file
     os.unlink(audio)
 
@@ -62,7 +62,7 @@ def speech_to_text(audio, friends):
     # load the model
     model = whisper.load_model('base')
     # transcribe the audio file knowing the user's friends and translate to english
-    result = model.transcribe(audio, task="translate",
+    result = model.transcribe(audio, language='en',
                               initial_prompt='Note that is possible that one or many of the following names appear ' + ', '.join(friends))
     return result['text']
     

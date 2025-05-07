@@ -31,7 +31,7 @@ def get_friends(id: int):
 def get_user(id: int):
     conn = database.get_connection()
     cur = conn.cursor()
-    cur.execute("SELECT id, nombre, telefono FROM usuarios WHERE id = %s", (id))
+    cur.execute("SELECT id, nombre, telefono FROM usuarios WHERE id = %s", (id,))
     row = cur.fetchone()
     cur.close()
     conn.close()
