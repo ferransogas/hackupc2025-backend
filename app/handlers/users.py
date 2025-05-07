@@ -27,3 +27,12 @@ def get_friends(id: int):
     cur.close()
     conn.close()
     return [{"id": row[0], "name": row[1], "phone": row[2]} for row in rows]
+
+def get_user(id: int):
+    conn = database.get_connection()
+    cur = conn.cursor()
+    cur.execute("SELECT id, nombre, telefono FROM usuarios WHERE id = %s", (id))
+    row = cur.fetchone()
+    cur.close()
+    conn.close()
+    return {"id": row[0], "name": row[1], "phone": row[2]}

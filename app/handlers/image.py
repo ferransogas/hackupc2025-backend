@@ -9,8 +9,7 @@ from app.config.config import CONFIG
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain.prompts import PromptTemplate
 from pydantic import BaseModel, ValidationError
-from typing import Dict, List
-
+from typing import Dict
 
 router = APIRouter()
 

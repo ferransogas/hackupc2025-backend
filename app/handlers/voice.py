@@ -3,7 +3,7 @@ from app.config.config import CONFIG
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain.prompts import PromptTemplate
 from fastapi import APIRouter, File, UploadFile, HTTPException, Form
-from app.handlers.users import get_friends
+from app.handlers.users import get_friends, get_user
 from pydantic import BaseModel, ValidationError
 from typing import Dict, List
 import os
@@ -32,6 +32,8 @@ async def process_speech(audio_file: UploadFile = File(...), products: str = For
     # parse the products
     products = json.loads(products)
         
+    # get user's name
+    user_name = get_user_name(user_id)
     # get user's friends
     friends_names = get_friends_names(user_id)
 
@@ -42,7 +44,7 @@ async def process_speech(audio_file: UploadFile = File(...), products: str = For
     os.unlink(audio)
 
     # extract data from the transcribed text
-    identified = extract_items_with_llm(text)
+    identified = extract_items_with_llm(text, user_name)
 
     # categorize the identified products
     categorized = categorize_products(identified, products.keys())
@@ -50,6 +52,8 @@ async def process_speech(audio_file: UploadFile = File(...), products: str = For
     # validate the categorized data
     return validate_data(categorized, 1).items  
     
+def get_user_name(user_id):
+    return get_user(user_id)['name']
 
 def get_friends_names(user_id):
     return [friend['name'] for friend in get_friends(user_id)]
@@ -60,10 +64,9 @@ def speech_to_text(audio, friends):
     # transcribe the audio file knowing the user's friends and translate to english
     result = model.transcribe(audio, task="translate",
                               initial_prompt='Note that is possible that one or many of the following names appear ' + ', '.join(friends))
-    print('Note that is possible that one or many of the following names appear ' + ', '.join(friends))
     return result['text']
     
-def extract_items_with_llm(text: str):
+def extract_items_with_llm(text: str, user_name: str):
     # create the data extractor llm and prompt it with the transcribed text
     llm = ChatGoogleGenerativeAI(model='gemma-3-27b-it', google_api_key=CONFIG['GEMINI_KEY'], temperature=0)
 
@@ -71,9 +74,10 @@ def extract_items_with_llm(text: str):
     You are a data extraction assistant. I will give you a sentence and a list of product categories.
 
     Your job is to identify what does pay each person and to extract a dictionary where the keys are the product names, and the values are lists of people who will pay for those products.
+    Note that if the first person is used, you have to interpret it as a person called "{user_name}".
 
     Return only a valid JSON like this:
-    {{ "pizza": ["Claudia", "Ferran"], "beverages": ["Jhon"], "candies": ["Lila"] }}
+    {{ "pizza": ["Antonia", "Pepe"], "beverages": ["Marco"], "candies": ["Andrés"] }}
 
 
     Rules:
@@ -90,7 +94,7 @@ def extract_items_with_llm(text: str):
     prompt = PromptTemplate.from_template(template)
     chain = prompt | llm
 
-    result = chain.invoke({'sentence': text})
+    result = chain.invoke({'sentence': text, 'user_name': user_name})
     raw = result.content.strip()
 
     # clean the code in case it's markdown
@@ -117,7 +121,7 @@ def categorize_products(identified: dict, products: dict):
     As a result, you will have to return a JSON dictionary with the same structure as A, but that contains just the final categorized products along with the people who pay for them.
 
     Return only a valid JSON like this:
-    {{ "pizza": ["Claudia", "Ferran"], "towel": ["Jhon"], "popcorn": ["Lila"] }}
+    {{ "pizza": ["Antonia", "Pepe"], "beverages": ["Marco"], "candies": ["Andrés"] }}
 
     Note that a initial product can be just the same as the final one, but an initial product can group some final products, or some initial products can be grouped into a final product.
     
