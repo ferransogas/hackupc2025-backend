@@ -1,11 +1,11 @@
 # split the bill
-This is a simple API that allows you to process receipts and voice recordings to extract product prices and categorize them.
+This is a simple API that helps you split bills with your contacts. It processes receipt images to extract products and prices, and analyzes voice recordings (which describe how the bill should be split) to categorize items and assign them to your friends.
 
 ## Getting started
 
 ### Prerequisites
 
-- Python > 3.9
+- Python >= 3.9, < 3.14
 - Poetry
 - Docker
 
